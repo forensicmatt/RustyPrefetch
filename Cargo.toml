@@ -1,0 +1,14 @@
+[package]
+name = "RustyPrefetch"
+version = "0.0.0"
+authors = ["matthew seyer <matthew.seyer@gmail.com>"]
+build = "build.rs"
+
+[lib]
+name = "rustyprefetch"
+crate-type = ["cdylib","lib"]
+
+[dependencies]
+libc = "0.2"
+clap = "*"
+byteorder = "*"
