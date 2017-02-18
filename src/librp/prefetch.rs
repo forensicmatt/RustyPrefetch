@@ -9,6 +9,17 @@ pub struct MamHeader{
     pub uncompressed_size: u32
 }
 
+#[derive(Debug)]
+pub struct PrefetchHeader{
+    pub version: u32,
+    pub signature: u32,
+    pub unknown1: u32,
+    pub filesize: u32,
+    pub filename: [u16; 30],
+    pub hash: u32,
+    pub unknon2: u32
+}
+
 pub fn read_mam_head<R: Read>(mut buffer: R)->Result<MamHeader,Error>{
     let mut header: MamHeader = unsafe {
         mem::zeroed()
