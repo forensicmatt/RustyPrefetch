@@ -1,4 +1,7 @@
+use byteorder::{ReadBytesExt, LittleEndian};
 use libc::{c_int,size_t,intptr_t};
+use std::io::Read;
+use std::io;
 use std::vec;
 use std::ptr;
 
