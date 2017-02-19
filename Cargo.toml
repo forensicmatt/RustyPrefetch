@@ -12,3 +12,4 @@ crate-type = ["cdylib","lib"]
 libc = "0.2"
 clap = "*"
 byteorder = "*"
+encoding = "0.2"
