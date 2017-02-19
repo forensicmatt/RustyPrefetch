@@ -1,9 +1,9 @@
 #[derive(Debug)]
 pub enum FileInformation{
-    FileInformationV17,
-    FileInformationV23,
-    FileInformationV26,
-    FileInformationV30
+    v17(FileInformationV17),
+    v23(FileInformationV23),
+    v26(FileInformationV26),
+    v30(FileInformationV30)
 }
 #[derive(Debug)]
 pub struct FileInformationV17{
