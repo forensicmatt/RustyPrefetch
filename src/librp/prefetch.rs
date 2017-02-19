@@ -1,5 +1,6 @@
 use librp::errors;
 use librp::compression;
+use librp::fileinfo;
 use std::io::{Error};
 use byteorder::{ReadBytesExt, LittleEndian};
 use std::io::BufReader;
@@ -18,19 +19,23 @@ pub struct MamHeader{
     pub uncompressed_size: u32
 }
 
-pub struct PrefetchFile{
-    pub filehandle: BufReader<Box<Read>>
+#[derive(Debug)]
+pub struct PrefetchHandle{
+    pub filename: String,
+    pub buffer: Vec<u8>
 }
-impl PrefetchFile{
-    pub fn new(prefetch_file: &str) -> Result<PrefetchFile,errors::PrefetchError> {
+impl PrefetchHandle{
+    pub fn new(prefetch_filename: &str) -> Result<PrefetchHandle,errors::PrefetchError> {
+        let mut prefetch_file: PrefetchHandle = unsafe {
+            mem::zeroed()
+        };
+        prefetch_file.filename = String::from(prefetch_filename);
+
         // Check if file is a prefetch file
-        let signature = prefetch_signature(prefetch_file)?;
+        let signature = prefetch_signature(prefetch_filename)?;
 
         // Open a filehandle to the file
-        let mut fh = File::open(prefetch_file)?;
-
-        // Our buffer that holds the entire file
-        let mut buffer: Vec<u8> = Vec::new();
+        let mut fh = File::open(prefetch_filename)?;
 
         if signature == 72171853{
             // Get MAM header
@@ -50,31 +55,106 @@ impl PrefetchFile{
                     format!("Error decompressing file")))
             };
 
-            buffer = decompressed_buffer.to_vec();
+            prefetch_file.buffer = decompressed_buffer.to_vec();
         } else {
-            try!(fh.read_to_end(&mut buffer));
+            try!(fh.read_to_end(&mut prefetch_file.buffer));
         }
 
-        Ok(PrefetchFile {
-            filehandle: BufReader::new(
-                Box::new(Cursor::new(buffer))
-            )
-        })
+        Ok(
+            prefetch_file
+        )
     }
 
-    pub fn get_file_header(&mut self) -> Result<PrefetchHeader,errors::PrefetchError>{
+    pub fn get_prefetch(&self) -> Result<PrefetchFile,errors::PrefetchError> {
+        Ok(
+            PrefetchFile::new(&self.buffer)?
+        )
+    }
+}
+
+#[derive(Debug)]
+pub struct PrefetchFile{
+    pub header: PrefetchHeader
+}
+impl PrefetchFile{
+    pub fn new(buffer: &Vec<u8>) -> Result<PrefetchFile,errors::PrefetchError> {
+        let prefetch_header = PrefetchHeader::new(buffer.as_slice())?;
+
+        Ok(
+            PrefetchFile{
+                header: prefetch_header
+            }
+        )
+    }
+
+    // pub fn parse_file_info(&mut self) -> Result<fileinfo::FileInformation,errors::PrefetchError> {
+    //     if self.header.version == 17{
+    //         let file_info: fileinfo::FileInformationV17 = unsafe {
+    //             mem::zeroed()
+    //         };
+    //         Ok(
+    //             fileinfo::FileInformation::v17(
+    //                 file_info
+    //             )
+    //         )
+    //     } else if self.header.version == 23{
+    //         let file_info: fileinfo::FileInformationV23 = unsafe {
+    //             mem::zeroed()
+    //         };
+    //         Ok(
+    //             fileinfo::FileInformation::v23(
+    //                 file_info
+    //             )
+    //         )
+    //     } else if self.header.version == 26{
+    //         let file_info: fileinfo::FileInformationV26 = unsafe {
+    //             mem::zeroed()
+    //         };
+    //         Ok(
+    //             fileinfo::FileInformation::v26(
+    //                 file_info
+    //             )
+    //         )
+    //     } else if self.header.version == 30{
+    //         let file_info: fileinfo::FileInformationV30 = unsafe {
+    //             mem::zeroed()
+    //         };
+    //         Ok(
+    //             fileinfo::FileInformation::v30(
+    //                 file_info
+    //             )
+    //         )
+    //     } else {
+    //         Err(errors::PrefetchError::parse_error(
+    //             format!("Error parsing file info. Invalid version: {}",self.header.version)
+    //         ))
+    //     }
+    // }
+}
+
+#[derive(Debug)]
+pub struct PrefetchHeader{
+    pub version: u32,
+    pub signature: u32,
+    pub unknown1: u32,
+    pub filesize: u32,
+    pub filename: String,
+    pub hash: u32,
+    pub unknon2: u32
+}
+impl PrefetchHeader{
+    pub fn new<R: Read>(mut buffer: R)->Result<PrefetchHeader,errors::PrefetchError>{
         let mut header: PrefetchHeader = unsafe {
             mem::zeroed()
         };
-
-        header.version = self.filehandle.read_u32::<LittleEndian>()?;
-        header.signature = self.filehandle.read_u32::<LittleEndian>()?;
-        header.unknown1 = self.filehandle.read_u32::<LittleEndian>()?;
-        header.filesize = self.filehandle.read_u32::<LittleEndian>()?;
+        header.version = buffer.read_u32::<LittleEndian>()?;
+        header.signature = buffer.read_u32::<LittleEndian>()?;
+        header.unknown1 = buffer.read_u32::<LittleEndian>()?;
+        header.filesize = buffer.read_u32::<LittleEndian>()?;
 
         // Create a vector to store the byte buffer
         let mut name_buffer = [0u8; 60];
-        self.filehandle.read_exact(&mut name_buffer)?;
+        buffer.read_exact(&mut name_buffer)?;
 
         header.filename = match UTF_16LE.decode(&name_buffer,DecoderTrap::Ignore){
             Ok(filename) => filename,
@@ -90,22 +170,11 @@ impl PrefetchFile{
             header.filename.truncate(eo);
         }
 
-        header.hash = self.filehandle.read_u32::<LittleEndian>()?;
-        header.unknon2 = self.filehandle.read_u32::<LittleEndian>()?;
+        header.hash = buffer.read_u32::<LittleEndian>()?;
+        header.unknon2 = buffer.read_u32::<LittleEndian>()?;
 
         Ok(header)
     }
-}
-
-#[derive(Debug)]
-pub struct PrefetchHeader{
-    pub version: u32,
-    pub signature: u32,
-    pub unknown1: u32,
-    pub filesize: u32,
-    pub filename: String,
-    pub hash: u32,
-    pub unknon2: u32
 }
 
 pub fn read_mam_head<R: Read>(mut buffer: R)->Result<MamHeader,Error>{
