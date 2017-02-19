@@ -22,17 +22,17 @@ fn main() {
     let filename = options.value_of("prefetch").unwrap();
 
     // Check if file is a prefetch file
-    let mut prefetch_file = match librp::prefetch::PrefetchFile::new(filename){
+    let mut prefetch_file = match librp::prefetch::PrefetchHandle::new(filename){
         Ok(prefetch_file) => prefetch_file,
         Err(error) => panic!(error)
     };
 
-    let prefetch_header = match prefetch_file.get_file_header() {
-        Ok(prefetch_header) => prefetch_header,
+    let mut prefetch = match prefetch_file.get_prefetch(){
+        Ok(prefetch) => prefetch,
         Err(error) => panic!(error)
     };
 
-    println!("prefetch_header: {:?}",prefetch_header);
+    println!("prefetch: {:?}",prefetch);
 
     println!("Finished");
 }
