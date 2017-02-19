@@ -2,6 +2,7 @@ use std::fmt;
 use std::fmt::Display;
 use std::result::Result as StdResult;
 use std::io;
+use std::string;
 
 pub type Result<T> = StdResult<T, PrefetchError>;
 
@@ -9,6 +10,9 @@ pub type Result<T> = StdResult<T, PrefetchError>;
 pub enum ErrorKind {
     InvalidFileSignature,
     IoError,
+    Utf16Error,
+    FromUtf16Error,
+    DecompressionError
 }
 /// USN Record Parsing Error
 #[derive(Debug)]
@@ -28,10 +32,24 @@ impl PrefetchError{
         }
     }
     #[allow(dead_code)]
+    pub fn decompression_error(err: String)->Self{
+        PrefetchError {
+            message: format!("{}",err),
+            kind: ErrorKind::DecompressionError
+        }
+    }
+    #[allow(dead_code)]
     pub fn io_error(err: String)->Self{
         PrefetchError {
             message: format!("{}",err),
             kind: ErrorKind::IoError
+        }
+    }
+    #[allow(dead_code)]
+    pub fn decode_error(err: String)->Self{
+        PrefetchError {
+            message: format!("{}",err),
+            kind: ErrorKind::Utf16Error
         }
     }
 }
@@ -41,6 +59,15 @@ impl From<io::Error> for PrefetchError {
         PrefetchError {
             message: format!("{}",err),
             kind: ErrorKind::IoError
+        }
+    }
+}
+
+impl From<string::FromUtf16Error> for PrefetchError {
+    fn from(err: string::FromUtf16Error) -> Self {
+        PrefetchError {
+            message: format!("{}",err),
+            kind: ErrorKind::FromUtf16Error
         }
     }
 }
