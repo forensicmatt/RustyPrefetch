@@ -9,6 +9,7 @@ pub type Result<T> = StdResult<T, PrefetchError>;
 #[derive(Debug)]
 pub enum ErrorKind {
     InvalidFileSignature,
+    ParseError,
     IoError,
     Utf16Error,
     FromUtf16Error,
@@ -29,6 +30,13 @@ impl PrefetchError{
         PrefetchError {
             message: format!("{}",err),
             kind: ErrorKind::InvalidFileSignature
+        }
+    }
+    #[allow(dead_code)]
+    pub fn parse_error(err: String)->Self{
+        PrefetchError {
+            message: format!("{}",err),
+            kind: ErrorKind::ParseError
         }
     }
     #[allow(dead_code)]
