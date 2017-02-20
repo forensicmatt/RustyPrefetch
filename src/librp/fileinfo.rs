@@ -204,7 +204,7 @@ impl FileInformation{
         }
     }
 }
-fn get_fileinfo_v26<R: Read>(mut reader: R) -> Result<FileInformationV26,PrefetchError> {
+pub fn get_fileinfo_v26<R: Read>(mut reader: R) -> Result<FileInformationV26,PrefetchError> {
     let mut bytes: [u8; 224] = [0;224];
     reader.read_exact(&mut bytes)?;
 
@@ -239,7 +239,7 @@ fn get_fileinfo_v26<R: Read>(mut reader: R) -> Result<FileInformationV26,Prefetc
 
     Ok(fileinfo_v26)
 }
-fn get_fileinfo_v30<R: Read>(mut reader: R) -> Result<FileInformationV30,PrefetchError> {
+pub fn get_fileinfo_v30<R: Read>(mut reader: R) -> Result<FileInformationV30,PrefetchError> {
     let mut bytes: [u8; 224] = [0;224];
     reader.read_exact(&mut bytes)?;
 
