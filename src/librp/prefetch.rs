@@ -4,7 +4,6 @@ use librp::fileinfo;
 use std::io::{Error};
 use byteorder::{ReadBytesExt, LittleEndian};
 use std::io::BufReader;
-use std::boxed::Box;
 use std::io::Cursor;
 use std::fs::File;
 use std::io::Read;
@@ -74,62 +73,30 @@ impl PrefetchHandle{
 
 #[derive(Debug)]
 pub struct PrefetchFile{
-    pub header: PrefetchHeader
+    pub header: PrefetchHeader,
+    pub fileinfo: fileinfo::FileInformation
 }
 impl PrefetchFile{
     pub fn new(buffer: &Vec<u8>) -> Result<PrefetchFile,errors::PrefetchError> {
-        let prefetch_header = PrefetchHeader::new(buffer.as_slice())?;
+        let mut reader = BufReader::new(
+            Cursor::new(buffer)
+        );
 
+        let prefetch_header = PrefetchHeader::new(
+            &mut reader
+        )?;
+
+        let file_info = fileinfo::FileInformation::new(
+            &prefetch_header,
+            &mut reader
+        )?;
         Ok(
             PrefetchFile{
-                header: prefetch_header
+                header: prefetch_header,
+                fileinfo: file_info
             }
         )
     }
-
-    // pub fn parse_file_info(&mut self) -> Result<fileinfo::FileInformation,errors::PrefetchError> {
-    //     if self.header.version == 17{
-    //         let file_info: fileinfo::FileInformationV17 = unsafe {
-    //             mem::zeroed()
-    //         };
-    //         Ok(
-    //             fileinfo::FileInformation::v17(
-    //                 file_info
-    //             )
-    //         )
-    //     } else if self.header.version == 23{
-    //         let file_info: fileinfo::FileInformationV23 = unsafe {
-    //             mem::zeroed()
-    //         };
-    //         Ok(
-    //             fileinfo::FileInformation::v23(
-    //                 file_info
-    //             )
-    //         )
-    //     } else if self.header.version == 26{
-    //         let file_info: fileinfo::FileInformationV26 = unsafe {
-    //             mem::zeroed()
-    //         };
-    //         Ok(
-    //             fileinfo::FileInformation::v26(
-    //                 file_info
-    //             )
-    //         )
-    //     } else if self.header.version == 30{
-    //         let file_info: fileinfo::FileInformationV30 = unsafe {
-    //             mem::zeroed()
-    //         };
-    //         Ok(
-    //             fileinfo::FileInformation::v30(
-    //                 file_info
-    //             )
-    //         )
-    //     } else {
-    //         Err(errors::PrefetchError::parse_error(
-    //             format!("Error parsing file info. Invalid version: {}",self.header.version)
-    //         ))
-    //     }
-    // }
 }
 
 #[derive(Debug)]
