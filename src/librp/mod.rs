@@ -6,3 +6,4 @@ pub mod fileinfo;
 pub mod metrics;
 pub mod tracechain;
 pub mod volume;
+pub mod timestamp;
