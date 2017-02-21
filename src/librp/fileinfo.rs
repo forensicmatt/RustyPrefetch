@@ -8,6 +8,7 @@ use std::io::Cursor;
 use std::io::BufReader;
 use std::fmt;
 use std::mem;
+
 #[derive(Debug)]
 pub enum FileInformation{
     V17(FileInformationV17),
@@ -15,7 +16,6 @@ pub enum FileInformation{
     V26(FileInformationV26),
     V30(FileInformationV30)
 }
-#[derive(Debug)]
 pub struct FileInformationV17{
     pub metrics_array_offset: u32, //The offset is relative to the start of the file
     pub metrics_entry_count: u32,
@@ -26,12 +26,46 @@ pub struct FileInformationV17{
     pub volume_info_offset: u32,
     pub volume_info_count: u32,
     pub volume_info_size: u32,
-    pub last_run_time: u64,
-    // pub unknown1: [u8; 16],
+    pub last_run_time: WinTimestamp,
+    pub unknown1: [u8; 16],
     pub run_count: u32,
     pub unknown2: u32
 }
-#[derive(Debug)]
+impl fmt::Debug for FileInformationV17 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "FileInformationV17 {{ \
+            metrics_array_offset: {}, \
+            metrics_entry_count: {}, \
+            trace_array_offset: {}, \
+            trace_entry_count: {}, \
+            filename_offset: {}, \
+            filename_length: {}, \
+            volume_info_offset: {}, \
+            volume_info_count: {}, \
+            volume_info_size: {}, \
+            last_run_time: {:?}, \
+            unknown1: {:?}, \
+            run_count: {}, \
+            unknown2: {}, \
+            }}",
+            self.metrics_array_offset,
+            self.metrics_entry_count,
+            self.trace_array_offset,
+            self.trace_entry_count,
+            self.filename_offset,
+            self.filename_length,
+            self.volume_info_offset,
+            self.volume_info_count,
+            self.volume_info_size,
+            self.last_run_time,
+            utils::to_hex_string(self.unknown1.to_vec()),
+            self.run_count,
+            self.unknown2
+        )
+    }
+}
 pub struct FileInformationV23{
     pub metrics_array_offset: u32, //The offset is relative to the start of the file
     pub metrics_entry_count: u32,
@@ -43,13 +77,51 @@ pub struct FileInformationV23{
     pub volume_info_count: u32,
     pub volume_info_size: u32,
     pub unknown3: u64,
-    pub last_run_time: u64,
-    // pub unknown1: [u8; 16],
+    pub last_run_time: WinTimestamp,
+    pub unknown1: [u8; 16],
     pub run_count: u32,
     pub unknown2: u32,
-    // pub unknown4: [u8; 80]
+    pub unknown4: [u8; 80]
 }
-
+impl fmt::Debug for FileInformationV23 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "FileInformationV23 {{ \
+            metrics_array_offset: {}, \
+            metrics_entry_count: {}, \
+            trace_array_offset: {}, \
+            trace_entry_count: {}, \
+            filename_offset: {}, \
+            filename_length: {}, \
+            volume_info_offset: {}, \
+            volume_info_count: {}, \
+            volume_info_size: {}, \
+            unknown3: {}, \
+            last_run_time: {:?}, \
+            unknown1: {:?}, \
+            run_count: {}, \
+            unknown2: {}, \
+            unknown4: {:?}\
+            }}",
+            self.metrics_array_offset,
+            self.metrics_entry_count,
+            self.trace_array_offset,
+            self.trace_entry_count,
+            self.filename_offset,
+            self.filename_length,
+            self.volume_info_offset,
+            self.volume_info_count,
+            self.volume_info_size,
+            self.unknown3,
+            self.last_run_time,
+            utils::to_hex_string(self.unknown1.to_vec()),
+            self.run_count,
+            self.unknown2,
+            utils::to_hex_string(self.unknown4.to_vec())
+        )
+    }
+}
 pub struct FileInformationV26{
     pub metrics_array_offset: u32, //The offset is relative to the start of the file
     pub metrics_entry_count: u32,
@@ -172,22 +244,12 @@ impl fmt::Debug for FileInformationV30 {
 impl FileInformation{
     pub fn new<R: Read>(header: &PrefetchHeader,reader: R) -> Result<FileInformation,PrefetchError> {
         if header.version == 17{
-            let file_info: FileInformationV17 = unsafe {
-                mem::zeroed()
-            };
             Ok(
-                FileInformation::V17(
-                    file_info
-                )
+                FileInformation::V17(get_fileinfo_v17(reader)?)
             )
         } else if header.version == 23{
-            let file_info: FileInformationV23 = unsafe {
-                mem::zeroed()
-            };
             Ok(
-                FileInformation::V23(
-                    file_info
-                )
+                FileInformation::V23(get_fileinfo_v23(reader)?)
             )
         } else if header.version == 26{
             Ok(
@@ -203,6 +265,68 @@ impl FileInformation{
             ))
         }
     }
+}
+pub fn get_fileinfo_v17<R: Read>(mut reader: R) -> Result<FileInformationV17,PrefetchError> {
+    let mut bytes: [u8; 68] = [0;68];
+    reader.read_exact(&mut bytes)?;
+
+    println!("fileinfo buffer hex: {:?}",utils::to_hex_string(bytes.to_vec()));
+
+    let mut buffer = BufReader::new(
+        Cursor::new(bytes.to_vec())
+    );
+
+    let mut fileinfo_v17: FileInformationV17 = unsafe {
+        mem::zeroed()
+    };
+
+    fileinfo_v17.metrics_array_offset = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v17.metrics_entry_count = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v17.trace_array_offset = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v17.trace_entry_count = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v17.filename_offset = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v17.filename_length = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v17.volume_info_offset = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v17.volume_info_count = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v17.volume_info_size = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v17.last_run_time = WinTimestamp(buffer.read_u64::<LittleEndian>()?);
+    buffer.read_exact(&mut fileinfo_v17.unknown1)?;
+    fileinfo_v17.run_count = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v17.unknown2 = buffer.read_u32::<LittleEndian>()?;
+
+    Ok(fileinfo_v17)
+}
+pub fn get_fileinfo_v23<R: Read>(mut reader: R) -> Result<FileInformationV23,PrefetchError> {
+    let mut bytes: [u8; 156] = [0;156];
+    reader.read_exact(&mut bytes)?;
+
+    println!("fileinfo buffer hex: {:?}",utils::to_hex_string(bytes.to_vec()));
+
+    let mut buffer = BufReader::new(
+        Cursor::new(bytes.to_vec())
+    );
+
+    let mut fileinfo_v23: FileInformationV23 = unsafe {
+        mem::zeroed()
+    };
+
+    fileinfo_v23.metrics_array_offset = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v23.metrics_entry_count = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v23.trace_array_offset = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v23.trace_entry_count = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v23.filename_offset = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v23.filename_length = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v23.volume_info_offset = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v23.volume_info_count = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v23.volume_info_size = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v23.unknown3 = buffer.read_u64::<LittleEndian>()?;
+    fileinfo_v23.last_run_time = WinTimestamp(buffer.read_u64::<LittleEndian>()?);
+    buffer.read_exact(&mut fileinfo_v23.unknown1)?;
+    fileinfo_v23.run_count = buffer.read_u32::<LittleEndian>()?;
+    fileinfo_v23.unknown2 = buffer.read_u32::<LittleEndian>()?;
+    buffer.read_exact(&mut fileinfo_v23.unknown4)?;
+
+    Ok(fileinfo_v23)
 }
 pub fn get_fileinfo_v26<R: Read>(mut reader: R) -> Result<FileInformationV26,PrefetchError> {
     let mut bytes: [u8; 224] = [0;224];
