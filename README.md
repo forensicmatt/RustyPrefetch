@@ -119,3 +119,10 @@ To build you must set LIBFWNT_BIN to the path that contains the compiled libscca
   }
 }
 ```
+
+# Decoder Tool
+The DecompressPrefetch tool under the examples can be used specifically to decompress MAM prefetch files.
+
+```
+DecompressPrefetch.exe -p COMPRESSED.EXE-9524B8E5.pf > DECOMPRESSED_PREFETCH.pf
+```
