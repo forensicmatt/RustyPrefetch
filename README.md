@@ -2,7 +2,13 @@
 Just another Prefetch parser...
 
 # Build
-To build you must set LIBFWNT_BIN to the path that contains the compiled libscca library. You must also copy the compiled library to the same folder as the compiled rust tools.
+To build you must set LIBFWNT_BIN to the path that contains the compiled libscca library. You must also copy the compiled library to the same folder as the compiled rust tools. At some point I will try and copy the compiled library from LIBFWNT_BIN to the compiled paths from the build... but for now it is a manual job
+
+To build RustyPrefetch
+```cargo build --release```
+
+To build DecompressPrefetch and examples
+```cargo test```
 
 # Example output
 ```RustyPrefetch.exe -p ..\testfiles\Prefetch\ATOM.EXE-9524B8E5.pf```
