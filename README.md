@@ -126,7 +126,7 @@ To build DecompressPrefetch and examples
 }
 ```
 
-# Decoder Tool
+# Decompression Tool
 The DecompressPrefetch tool under the examples can be used specifically to decompress MAM prefetch files.
 
 ```
