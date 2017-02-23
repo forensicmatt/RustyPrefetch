@@ -1,5 +1,6 @@
 extern crate rustyprefetch;
 extern crate clap;
+#[macro_use] extern crate serde_json;
 use rustyprefetch::librp;
 use clap::{App, Arg};
 
@@ -32,7 +33,6 @@ fn main() {
         Err(error) => panic!(error)
     };
 
-    println!("prefetch: {:?}",prefetch);
-
-    println!("Finished");
+    let serialized = serde_json::to_string_pretty(&prefetch).unwrap();
+    println!("{}",serialized);
 }

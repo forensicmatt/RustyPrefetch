@@ -71,7 +71,7 @@ impl PrefetchHandle{
     }
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct PrefetchFile{
     pub header: PrefetchHeader,
     pub fileinfo: fileinfo::FileInformation
@@ -99,7 +99,7 @@ impl PrefetchFile{
     }
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct PrefetchHeader{
     pub version: u32,
     pub signature: u32,

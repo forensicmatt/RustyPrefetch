@@ -2,6 +2,7 @@ use librp::errors::{PrefetchError};
 use librp::prefetch::{PrefetchHeader};
 use librp::timestamp::{WinTimestamp};
 use librp::utils;
+use librp::utils::{ByteArray};
 use byteorder::{ReadBytesExt, LittleEndian};
 use std::io::Read;
 use std::io::Cursor;
@@ -9,13 +10,15 @@ use std::io::BufReader;
 use std::fmt;
 use std::mem;
 
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
+#[serde(untagged)]
 pub enum FileInformation{
     V17(FileInformationV17),
     V23(FileInformationV23),
     V26(FileInformationV26),
     V30(FileInformationV30)
 }
+#[derive(Serialize)]
 pub struct FileInformationV17{
     pub metrics_array_offset: u32, //The offset is relative to the start of the file
     pub metrics_entry_count: u32,
@@ -27,7 +30,7 @@ pub struct FileInformationV17{
     pub volume_info_count: u32,
     pub volume_info_size: u32,
     pub last_run_time: WinTimestamp,
-    pub unknown1: [u8; 16],
+    pub unknown1: ByteArray, //[u8; 16],
     pub run_count: u32,
     pub unknown2: u32
 }
@@ -60,12 +63,13 @@ impl fmt::Debug for FileInformationV17 {
             self.volume_info_count,
             self.volume_info_size,
             self.last_run_time,
-            utils::to_hex_string(self.unknown1.to_vec()),
+            self.unknown1,
             self.run_count,
             self.unknown2
         )
     }
 }
+#[derive(Serialize)]
 pub struct FileInformationV23{
     pub metrics_array_offset: u32, //The offset is relative to the start of the file
     pub metrics_entry_count: u32,
@@ -78,10 +82,10 @@ pub struct FileInformationV23{
     pub volume_info_size: u32,
     pub unknown3: u64,
     pub last_run_time: WinTimestamp,
-    pub unknown1: [u8; 16],
+    pub unknown1: ByteArray, //[u8; 16],
     pub run_count: u32,
     pub unknown2: u32,
-    pub unknown4: [u8; 80]
+    pub unknown4: ByteArray //[u8; 80]
 }
 impl fmt::Debug for FileInformationV23 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -115,13 +119,14 @@ impl fmt::Debug for FileInformationV23 {
             self.volume_info_size,
             self.unknown3,
             self.last_run_time,
-            utils::to_hex_string(self.unknown1.to_vec()),
+            self.unknown1,
             self.run_count,
             self.unknown2,
-            utils::to_hex_string(self.unknown4.to_vec())
+            self.unknown4
         )
     }
 }
+#[derive(Serialize)]
 pub struct FileInformationV26{
     pub metrics_array_offset: u32, //The offset is relative to the start of the file
     pub metrics_entry_count: u32,
@@ -134,11 +139,11 @@ pub struct FileInformationV26{
     pub volume_info_size: u32,
     pub unknown3: u64,
     pub last_run_time: [WinTimestamp;8],
-    pub unknown1: [u8; 16],
+    pub unknown1: ByteArray, //[u8; 16],
     pub run_count: u32,
     pub unknown2: u32,
     pub unknown5: u32,
-    pub unknown4: [u8; 88]
+    pub unknown4: ByteArray //[u8; 88],
 }
 impl fmt::Debug for FileInformationV26 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -173,14 +178,15 @@ impl fmt::Debug for FileInformationV26 {
             self.volume_info_size,
             self.unknown3,
             self.last_run_time,
-            utils::to_hex_string(self.unknown1.to_vec()),
+            self.unknown1,
             self.run_count,
             self.unknown2,
             self.unknown5,
-            utils::to_hex_string(self.unknown4.to_vec())
+            self.unknown4
         )
     }
 }
+#[derive(Serialize)]
 pub struct FileInformationV30{
     pub metrics_array_offset: u32, //The offset is relative to the start of the file
     pub metrics_entry_count: u32,
@@ -193,11 +199,11 @@ pub struct FileInformationV30{
     pub volume_info_size: u32,
     pub unknown3: u64,
     pub last_run_time: [WinTimestamp;8],
-    pub unknown1: [u8; 16],
+    pub unknown1: ByteArray, //[u8; 16],
     pub run_count: u32,
     pub unknown2: u32,
     pub unknown5: u32,
-    pub unknown4: [u8; 88]
+    pub unknown4: ByteArray //[u8; 88]
 }
 impl fmt::Debug for FileInformationV30 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -232,11 +238,11 @@ impl fmt::Debug for FileInformationV30 {
             self.volume_info_size,
             self.unknown3,
             self.last_run_time,
-            utils::to_hex_string(self.unknown1.to_vec()),
+            self.unknown1,
             self.run_count,
             self.unknown2,
             self.unknown5,
-            utils::to_hex_string(self.unknown4.to_vec())
+            self.unknown4
         )
     }
 }
@@ -270,7 +276,7 @@ pub fn get_fileinfo_v17<R: Read>(mut reader: R) -> Result<FileInformationV17,Pre
     let mut bytes: [u8; 68] = [0;68];
     reader.read_exact(&mut bytes)?;
 
-    println!("fileinfo buffer hex: {:?}",utils::to_hex_string(bytes.to_vec()));
+    // println!("fileinfo buffer hex: {:?}",utils::to_hex_string(bytes.to_vec()));
 
     let mut buffer = BufReader::new(
         Cursor::new(bytes.to_vec())
@@ -290,7 +296,10 @@ pub fn get_fileinfo_v17<R: Read>(mut reader: R) -> Result<FileInformationV17,Pre
     fileinfo_v17.volume_info_count = buffer.read_u32::<LittleEndian>()?;
     fileinfo_v17.volume_info_size = buffer.read_u32::<LittleEndian>()?;
     fileinfo_v17.last_run_time = WinTimestamp(buffer.read_u64::<LittleEndian>()?);
-    buffer.read_exact(&mut fileinfo_v17.unknown1)?;
+
+    fileinfo_v17.unknown1 = ByteArray(vec![0; 16]);
+    buffer.read_exact(&mut fileinfo_v17.unknown1.0.as_mut_slice())?;
+
     fileinfo_v17.run_count = buffer.read_u32::<LittleEndian>()?;
     fileinfo_v17.unknown2 = buffer.read_u32::<LittleEndian>()?;
 
@@ -300,7 +309,7 @@ pub fn get_fileinfo_v23<R: Read>(mut reader: R) -> Result<FileInformationV23,Pre
     let mut bytes: [u8; 156] = [0;156];
     reader.read_exact(&mut bytes)?;
 
-    println!("fileinfo buffer hex: {:?}",utils::to_hex_string(bytes.to_vec()));
+    // println!("fileinfo buffer hex: {:?}",utils::to_hex_string(bytes.to_vec()));
 
     let mut buffer = BufReader::new(
         Cursor::new(bytes.to_vec())
@@ -321,10 +330,15 @@ pub fn get_fileinfo_v23<R: Read>(mut reader: R) -> Result<FileInformationV23,Pre
     fileinfo_v23.volume_info_size = buffer.read_u32::<LittleEndian>()?;
     fileinfo_v23.unknown3 = buffer.read_u64::<LittleEndian>()?;
     fileinfo_v23.last_run_time = WinTimestamp(buffer.read_u64::<LittleEndian>()?);
-    buffer.read_exact(&mut fileinfo_v23.unknown1)?;
+
+    fileinfo_v23.unknown1 = ByteArray(vec![0; 16]);
+    buffer.read_exact(&mut fileinfo_v23.unknown1.0.as_mut_slice())?;
+
     fileinfo_v23.run_count = buffer.read_u32::<LittleEndian>()?;
     fileinfo_v23.unknown2 = buffer.read_u32::<LittleEndian>()?;
-    buffer.read_exact(&mut fileinfo_v23.unknown4)?;
+
+    fileinfo_v23.unknown4 = ByteArray(vec![0; 80]);
+    buffer.read_exact(&mut fileinfo_v23.unknown4.0.as_mut_slice())?;
 
     Ok(fileinfo_v23)
 }
@@ -332,7 +346,7 @@ pub fn get_fileinfo_v26<R: Read>(mut reader: R) -> Result<FileInformationV26,Pre
     let mut bytes: [u8; 224] = [0;224];
     reader.read_exact(&mut bytes)?;
 
-    println!("fileinfo buffer hex: {:?}",utils::to_hex_string(bytes.to_vec()));
+    // println!("fileinfo buffer hex: {:?}",utils::to_hex_string(bytes.to_vec()));
 
     let mut buffer = BufReader::new(
         Cursor::new(bytes.to_vec())
@@ -355,11 +369,16 @@ pub fn get_fileinfo_v26<R: Read>(mut reader: R) -> Result<FileInformationV26,Pre
     for n in 0..8 {
         fileinfo_v26.last_run_time[n] = WinTimestamp(buffer.read_u64::<LittleEndian>()?);
     }
-    buffer.read_exact(&mut fileinfo_v26.unknown1)?;
+
+    fileinfo_v26.unknown1 = ByteArray(vec![0; 16]);
+    buffer.read_exact(&mut fileinfo_v26.unknown1.0.as_mut_slice())?;
+
     fileinfo_v26.run_count = buffer.read_u32::<LittleEndian>()?;
     fileinfo_v26.unknown2 = buffer.read_u32::<LittleEndian>()?;
     fileinfo_v26.unknown5 = buffer.read_u32::<LittleEndian>()?;
-    buffer.read_exact(&mut fileinfo_v26.unknown4)?;
+
+    fileinfo_v26.unknown4 = ByteArray(vec![0; 88]);
+    buffer.read_exact(&mut fileinfo_v26.unknown4.0.as_mut_slice())?;
 
     Ok(fileinfo_v26)
 }
@@ -367,7 +386,7 @@ pub fn get_fileinfo_v30<R: Read>(mut reader: R) -> Result<FileInformationV30,Pre
     let mut bytes: [u8; 224] = [0;224];
     reader.read_exact(&mut bytes)?;
 
-    println!("fileinfo buffer hex: {:?}",utils::to_hex_string(bytes.to_vec()));
+    // println!("fileinfo buffer hex: {:?}",utils::to_hex_string(bytes.to_vec()));
 
     let mut buffer = BufReader::new(
         Cursor::new(bytes.to_vec())
@@ -390,11 +409,16 @@ pub fn get_fileinfo_v30<R: Read>(mut reader: R) -> Result<FileInformationV30,Pre
     for n in 0..8 {
         fileinfo_v30.last_run_time[n] = WinTimestamp(buffer.read_u64::<LittleEndian>()?);
     }
-    buffer.read_exact(&mut fileinfo_v30.unknown1)?;
+
+    fileinfo_v30.unknown1 = ByteArray(vec![0; 16]);
+    buffer.read_exact(&mut fileinfo_v30.unknown1.0.as_mut_slice())?;
+
     fileinfo_v30.run_count = buffer.read_u32::<LittleEndian>()?;
     fileinfo_v30.unknown2 = buffer.read_u32::<LittleEndian>()?;
     fileinfo_v30.unknown5 = buffer.read_u32::<LittleEndian>()?;
-    buffer.read_exact(&mut fileinfo_v30.unknown4)?;
+
+    fileinfo_v30.unknown4 = ByteArray(vec![0; 88]);
+    buffer.read_exact(&mut fileinfo_v30.unknown4.0.as_mut_slice())?;
 
     Ok(fileinfo_v30)
 }
