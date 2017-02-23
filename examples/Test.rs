@@ -193,5 +193,5 @@ fn main(){
         None => panic!("No decopressed buffer")
     };
 
-    println!("Decompressed Buffer: {:?}",librp::utils::to_hex_string(decompressed_buffer.clone()));
+    println!("Decompressed Buffer: {:?}",librp::utils::to_hex_string(&decompressed_buffer.clone()));
 }
