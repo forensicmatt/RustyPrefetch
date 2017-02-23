@@ -1,5 +1,6 @@
 use librp::errors;
 use librp::compression;
+use librp::filestrings;
 use librp::fileinfo;
 use std::io::{Error};
 use byteorder::{ReadBytesExt, LittleEndian};
@@ -8,7 +9,6 @@ use std::io::Cursor;
 use std::fs::File;
 use std::io::Read;
 use std::mem;
-
 use encoding::{Encoding, DecoderTrap};
 use encoding::all::UTF_16LE;
 
