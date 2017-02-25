@@ -1,5 +1,5 @@
 use std::fmt;
-use serde::{ser, de};
+use serde::{ser};
 
 pub fn to_hex_string(bytes: &Vec<u8>) -> String {
     let strs: Vec<String> = bytes.iter()

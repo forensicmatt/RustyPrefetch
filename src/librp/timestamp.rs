@@ -5,7 +5,7 @@ use std::io::{Error};
 use std::fmt;
 use std::fmt::{Display,Debug};
 use std::io::Read;
-use serde::{ser, de};
+use serde::{ser};
 
 pub struct WinTimestamp(
     pub u64
