@@ -4,7 +4,7 @@ use librp::metrics;
 use librp::fileinfo;
 use std::io::{Error};
 use byteorder::{ReadBytesExt, LittleEndian};
-use std::io::BufReader;
+use seek_bufread::BufReader;
 use std::io::Cursor;
 use std::fs::File;
 use std::io::Read;
