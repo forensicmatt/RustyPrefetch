@@ -30,7 +30,10 @@ fn main() {
 
     let prefetch = match prefetch_file.get_prefetch(){
         Ok(prefetch) => prefetch,
-        Err(error) => panic!(error)
+        Err(error) => {
+            println!("{:?}",error);
+            panic!(error)
+        }
     };
 
     let serialized = serde_json::to_string_pretty(&prefetch).unwrap();
