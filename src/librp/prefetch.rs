@@ -2,6 +2,7 @@ use librp::errors;
 use librp::compression;
 use librp::metrics;
 use librp::fileinfo;
+use librp::volume;
 use std::io::{Error};
 use byteorder::{ReadBytesExt, LittleEndian};
 use seek_bufread::BufReader;
@@ -75,7 +76,8 @@ impl PrefetchHandle{
 pub struct PrefetchFile{
     pub header: PrefetchHeader,
     pub fileinfo: fileinfo::FileInformation,
-    pub metrics: metrics::MetricsArray
+    pub metrics: metrics::MetricsArray,
+    pub volumes: volume::VolumeArray
 }
 impl PrefetchFile{
     pub fn new(buffer: &Vec<u8>) -> Result<PrefetchFile,errors::PrefetchError> {
@@ -98,11 +100,18 @@ impl PrefetchFile{
             &mut reader
         )?;
 
+        let volume_array = volume::VolumeArray::new(
+            &prefetch_header,
+            &file_info,
+            &mut reader
+        )?;
+
         Ok(
             PrefetchFile{
                 header: prefetch_header,
                 fileinfo: file_info,
-                metrics: metrics_array
+                metrics: metrics_array,
+                volumes: volume_array
             }
         )
     }

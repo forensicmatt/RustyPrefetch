@@ -71,6 +71,60 @@ pub enum MetricEntry{
     V26(MetricEntryV26),
     V30(MetricEntryV30)
 }
+
+impl MetricEntry{
+    pub fn new<Rs: Read+Seek>(header: &PrefetchHeader, fileinfo: &FileInformation, mut reader: Rs) -> Result<MetricEntry,PrefetchError> {
+        if header.version == 17{
+            let mut metric_v17 = MetricEntryV17::new(&mut reader)?;
+            metric_v17.get_filename_string(
+                fileinfo,
+                &mut reader
+            )?;
+            metric_v17.get_tracechains(
+                fileinfo,
+                &mut reader
+            )?;
+            Ok(MetricEntry::V17(metric_v17))
+        } else if header.version == 23{
+            let mut metric_v23 = MetricEntryV23::new(&mut reader)?;
+            metric_v23.get_filename_string(
+                fileinfo,
+                &mut reader
+            )?;
+            metric_v23.get_tracechains(
+                fileinfo,
+                &mut reader
+            )?;
+            Ok(MetricEntry::V23(metric_v23))
+        } else if header.version == 26{
+            let mut metric_v26 = MetricEntryV26::new(&mut reader)?;
+            metric_v26.get_filename_string(
+                fileinfo,
+                &mut reader
+            )?;
+            metric_v26.get_tracechains(
+                fileinfo,
+                &mut reader
+            )?;
+            Ok(MetricEntry::V26(metric_v26))
+        } else if header.version == 30{
+            let mut metric_v30 = MetricEntryV30::new(&mut reader)?;
+            metric_v30.get_filename_string(
+                fileinfo,
+                &mut reader
+            )?;
+            metric_v30.get_tracechains(
+                fileinfo,
+                &mut reader
+            )?;
+            Ok(MetricEntry::V30(metric_v30))
+        } else {
+            Err(PrefetchError::parse_error(
+                format!("Error parsing file info. Invalid version: {}",header.version)
+            ))
+        }
+    }
+}
 #[derive(Serialize, Debug)]
 pub struct MetricEntryV17{
     pub tracechain_index: u32,
@@ -309,59 +363,5 @@ impl MetricEntryV30{
         )?;
 
         Ok(true)
-    }
-}
-
-impl MetricEntry{
-    pub fn new<Rs: Read+Seek>(header: &PrefetchHeader, fileinfo: &FileInformation, mut reader: Rs) -> Result<MetricEntry,PrefetchError> {
-        if header.version == 17{
-            let mut metric_v17 = MetricEntryV17::new(&mut reader)?;
-            metric_v17.get_filename_string(
-                fileinfo,
-                &mut reader
-            )?;
-            metric_v17.get_tracechains(
-                fileinfo,
-                &mut reader
-            )?;
-            Ok(MetricEntry::V17(metric_v17))
-        } else if header.version == 23{
-            let mut metric_v23 = MetricEntryV23::new(&mut reader)?;
-            metric_v23.get_filename_string(
-                fileinfo,
-                &mut reader
-            )?;
-            metric_v23.get_tracechains(
-                fileinfo,
-                &mut reader
-            )?;
-            Ok(MetricEntry::V23(metric_v23))
-        } else if header.version == 26{
-            let mut metric_v26 = MetricEntryV26::new(&mut reader)?;
-            metric_v26.get_filename_string(
-                fileinfo,
-                &mut reader
-            )?;
-            metric_v26.get_tracechains(
-                fileinfo,
-                &mut reader
-            )?;
-            Ok(MetricEntry::V26(metric_v26))
-        } else if header.version == 30{
-            let mut metric_v30 = MetricEntryV30::new(&mut reader)?;
-            metric_v30.get_filename_string(
-                fileinfo,
-                &mut reader
-            )?;
-            metric_v30.get_tracechains(
-                fileinfo,
-                &mut reader
-            )?;
-            Ok(MetricEntry::V30(metric_v30))
-        } else {
-            Err(PrefetchError::parse_error(
-                format!("Error parsing file info. Invalid version: {}",header.version)
-            ))
-        }
     }
 }
