@@ -3,13 +3,44 @@ extern crate clap;
 #[macro_use] extern crate serde_json;
 use rustyprefetch::librp;
 use clap::{App, Arg};
+use std::fs;
+use std::io;
+
+fn process_directory(directory: &str){
+    println!("process_directory() Not yet implemented");
+    for entry in fs::read_dir(directory).unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        if path.is_file() {
+            println!("path: {:?}",path);
+        }
+    }
+}
+
+fn process_file(filename: &str){
+    // Check if file is a prefetch file
+    let prefetch_file = librp::prefetch::PrefetchHandle::new(filename).unwrap();
+
+    let prefetch = prefetch_file.get_prefetch().unwrap();
+
+    let serialized = serde_json::to_string_pretty(&prefetch).unwrap();
+    println!("{}",serialized);
+}
+
+fn is_directory(source: &str)->bool{
+    let metadata = fs::metadata(source).unwrap();
+
+    let file_type = metadata.file_type();
+
+    file_type.is_dir()
+}
 
 fn main() {
-    let prefetch_arg = Arg::with_name("prefetch")
-        .short("p")
-        .long("prefetch")
+    let prefetch_arg = Arg::with_name("source")
+        .short("s")
+        .long("source")
         .value_name("FILE")
-        .help("The Prefetch file to decode")
+        .help("The source path. Can be a file or a directory.")
         .required(true)
         .takes_value(true);
 
@@ -20,22 +51,11 @@ fn main() {
         .arg(prefetch_arg)
         .get_matches();
 
-    let filename = options.value_of("prefetch").unwrap();
+    let source = options.value_of("source").unwrap();
 
-    // Check if file is a prefetch file
-    let prefetch_file = match librp::prefetch::PrefetchHandle::new(filename){
-        Ok(prefetch_file) => prefetch_file,
-        Err(error) => panic!(error)
-    };
-
-    let prefetch = match prefetch_file.get_prefetch(){
-        Ok(prefetch) => prefetch,
-        Err(error) => {
-            println!("{:?}",error);
-            panic!(error)
-        }
-    };
-
-    let serialized = serde_json::to_string_pretty(&prefetch).unwrap();
-    println!("{}",serialized);
+    if is_directory(source) {
+        process_directory(source);
+    } else {
+        process_file(source);
+    }
 }
