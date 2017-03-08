@@ -1,30 +1,34 @@
 extern crate rustyprefetch;
 extern crate clap;
-#[macro_use] extern crate serde_json;
+extern crate serde_json;
+extern crate serde;
+use serde::Serializer;
+use serde::ser::SerializeSeq;
 use rustyprefetch::librp;
 use clap::{App, Arg};
 use std::fs;
 use std::io;
 
-fn process_directory(directory: &str){
-    println!("process_directory() Not yet implemented");
+fn process_directory<S>(directory: &str, serializer: S) where S: serde::Serializer {
+    let mut seq = serializer.serialize_seq(None).unwrap();
     for entry in fs::read_dir(directory).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
         if path.is_file() {
-            println!("path: {:?}",path);
+            let path_string = path.into_os_string().into_string().unwrap();
+            if path_string.ends_with(".pf"){
+                process_file(&path_string,&mut seq);
+            }
         }
     }
+    seq.end().unwrap();
 }
 
-fn process_file(filename: &str){
+fn process_file<S>(filename: &str, serializer: &mut S) where S: serde::ser::SerializeSeq {
     // Check if file is a prefetch file
     let prefetch_file = librp::prefetch::PrefetchHandle::new(filename).unwrap();
-
     let prefetch = prefetch_file.get_prefetch().unwrap();
-
-    let serialized = serde_json::to_string_pretty(&prefetch).unwrap();
-    println!("{}",serialized);
+    serializer.serialize_element(&prefetch).unwrap();
 }
 
 fn is_directory(source: &str)->bool{
@@ -53,9 +57,15 @@ fn main() {
 
     let source = options.value_of("source").unwrap();
 
+    let mut serializer = serde_json::Serializer::pretty(
+        io::stdout()
+    );
+
     if is_directory(source) {
-        process_directory(source);
+        process_directory(source,&mut serializer);
     } else {
-        process_file(source);
+        let mut seq = serializer.serialize_seq(None).unwrap();
+        process_file(source,&mut seq);
+        seq.end().unwrap();
     }
 }

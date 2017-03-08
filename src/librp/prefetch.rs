@@ -67,20 +67,21 @@ impl PrefetchHandle{
 
     pub fn get_prefetch(&self) -> Result<PrefetchFile,errors::PrefetchError> {
         Ok(
-            PrefetchFile::new(&self.buffer)?
+            PrefetchFile::new(self.filename.clone(),&self.buffer)?
         )
     }
 }
 
 #[derive(Serialize, Debug)]
 pub struct PrefetchFile{
+    pub source_file: String,
     pub header: PrefetchHeader,
     pub fileinfo: fileinfo::FileInformation,
     pub metrics: metrics::MetricsArray,
     pub volumes: volume::VolumeArray
 }
 impl PrefetchFile{
-    pub fn new(buffer: &Vec<u8>) -> Result<PrefetchFile,errors::PrefetchError> {
+    pub fn new(filename: String, buffer: &Vec<u8>) -> Result<PrefetchFile,errors::PrefetchError> {
         let mut reader = BufReader::new(
             Cursor::new(buffer)
         );
@@ -108,6 +109,7 @@ impl PrefetchFile{
 
         Ok(
             PrefetchFile{
+                source_file: filename,
                 header: prefetch_header,
                 fileinfo: file_info,
                 metrics: metrics_array,
