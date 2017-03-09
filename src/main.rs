@@ -48,12 +48,24 @@ fn main() {
         .required(true)
         .takes_value(true);
 
+    let metrics_arg = Arg::with_name("pipe")
+        .short("t")
+        .long("tracechain")
+        .help("Output Tracechains");
+
     let options = App::new("RustyPrefetch")
         .version("0.0.0")
         .author("Matthew Seyer <matthew.seyer@gmail.com>")
         .about("Parse prefetch.")
         .arg(prefetch_arg)
+        .arg(metrics_arg)
         .get_matches();
+
+    if options.is_present("metrics"){
+        unsafe {
+            librp::metrics::SKIP_TRACECHAIN = true;
+        }
+    }
 
     let source = options.value_of("source").unwrap();
 

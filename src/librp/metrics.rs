@@ -9,6 +9,8 @@ use std::io::Read;
 use std::io::Seek;
 use std::mem;
 
+pub static mut SKIP_TRACECHAIN: bool = false;
+
 #[derive(Serialize, Debug)]
 pub struct MetricsArray(
     pub Vec<MetricEntry>
@@ -80,10 +82,12 @@ impl MetricEntry{
                 fileinfo,
                 &mut reader
             )?;
-            metric_v17.get_tracechains(
-                fileinfo,
-                &mut reader
-            )?;
+            if unsafe{SKIP_TRACECHAIN} {
+                metric_v17.get_tracechains(
+                    fileinfo,
+                    &mut reader
+                )?;
+            }
             Ok(MetricEntry::V17(metric_v17))
         } else if header.version == 23{
             let mut metric_v23 = MetricEntryV23::new(&mut reader)?;
@@ -91,10 +95,12 @@ impl MetricEntry{
                 fileinfo,
                 &mut reader
             )?;
-            metric_v23.get_tracechains(
-                fileinfo,
-                &mut reader
-            )?;
+            if unsafe{SKIP_TRACECHAIN} {
+                metric_v23.get_tracechains(
+                    fileinfo,
+                    &mut reader
+                )?;
+            }
             Ok(MetricEntry::V23(metric_v23))
         } else if header.version == 26{
             let mut metric_v26 = MetricEntryV26::new(&mut reader)?;
@@ -102,10 +108,12 @@ impl MetricEntry{
                 fileinfo,
                 &mut reader
             )?;
-            metric_v26.get_tracechains(
-                fileinfo,
-                &mut reader
-            )?;
+            if unsafe{SKIP_TRACECHAIN} {
+                metric_v26.get_tracechains(
+                    fileinfo,
+                    &mut reader
+                )?;
+            }
             Ok(MetricEntry::V26(metric_v26))
         } else if header.version == 30{
             let mut metric_v30 = MetricEntryV30::new(&mut reader)?;
@@ -113,10 +121,12 @@ impl MetricEntry{
                 fileinfo,
                 &mut reader
             )?;
-            metric_v30.get_tracechains(
-                fileinfo,
-                &mut reader
-            )?;
+            if unsafe{SKIP_TRACECHAIN} {
+                metric_v30.get_tracechains(
+                    fileinfo,
+                    &mut reader
+                )?;
+            }
             Ok(MetricEntry::V30(metric_v30))
         } else {
             Err(PrefetchError::parse_error(
