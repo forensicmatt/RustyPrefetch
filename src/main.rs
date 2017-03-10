@@ -63,7 +63,7 @@ fn main() {
 
     let options = App::new("RustyPrefetch")
         .version("0.0.0")
-        .author("Matthew Seyer <matthew.seyer@gmail.com>")
+        .author("Matthew Seyer <https://github.com/forensicmatt/RustyPrefetch>")
         .about("Parse prefetch.")
         .arg(prefetch_arg)
         .arg(metrics_arg)

@@ -16,10 +16,10 @@ fn main() {
         .required(true)
         .takes_value(true);
 
-    let options = App::new("DecodePrefetch")
+    let options = App::new("DecompressPrefetch")
         .version("0.0.0")
-        .author("Matthew Seyer <matthew.seyer@gmail.com>")
-        .about("Test tool to decode a compressed prefetch file.")
+        .author("Matthew Seyer <https://github.com/forensicmatt/RustyPrefetch>")
+        .about("Test tool to decompress a compressed prefetch file.")
         .arg(prefetch_arg)
         .get_matches();
 
