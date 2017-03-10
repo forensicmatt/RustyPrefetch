@@ -14,7 +14,7 @@ To build DecompressPrefetch and examples
 ```
 RustyPrefetch\target\release>RustyPrefetch.exe -h
 RustyPrefetch 0.0.0
-Matthew Seyer <matthew.seyer@gmail.com>
+Matthew Seyer <https://github.com/forensicmatt/RustyPrefetch>
 Parse prefetch.
 
 USAGE:
@@ -32,7 +32,7 @@ OPTIONS:
 ```
 RustyPrefetch\target\release\examples>DecompressPrefetch.exe -h
 DecodePrefetch 0.0.0
-Matthew Seyer <matthew.seyer@gmail.com>
+Matthew Seyer <https://github.com/forensicmatt/RustyPrefetch>
 Test tool to decode a compressed prefetch file.
 
 USAGE:
