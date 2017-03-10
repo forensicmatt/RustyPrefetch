@@ -9,6 +9,7 @@ name = "rustyprefetch"
 crate-type = ["cdylib","lib"]
 
 [dependencies]
+log = "0.3"
 libc = "0.2"
 clap = "*"
 byteorder = "*"

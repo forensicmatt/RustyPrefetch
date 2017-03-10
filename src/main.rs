@@ -1,3 +1,4 @@
+#[macro_use] extern crate log;
 extern crate rustyprefetch;
 extern crate clap;
 extern crate serde_json;
@@ -24,11 +25,18 @@ fn process_directory<S>(directory: &str, serializer: S) where S: serde::Serializ
     seq.end().unwrap();
 }
 
-fn process_file<S>(filename: &str, serializer: &mut S) where S: serde::ser::SerializeSeq {
+fn process_file<S: serde::ser::SerializeSeq>(filename: &str, serializer: &mut S) -> bool {
     // Check if file is a prefetch file
-    let prefetch_file = librp::prefetch::PrefetchHandle::new(filename).unwrap();
+    let prefetch_file = match librp::prefetch::PrefetchHandle::new(filename) {
+        Ok(prefetch_file) => prefetch_file,
+        Err(error) => {
+            warn!("Could not parse file: {} [error: {}]", filename, error);
+            return false;
+        }
+    };
     let prefetch = prefetch_file.get_prefetch().unwrap();
     serializer.serialize_element(&prefetch).unwrap();
+    return true;
 }
 
 fn is_directory(source: &str)->bool{

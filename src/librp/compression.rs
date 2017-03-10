@@ -1,5 +1,5 @@
 use libc::{c_int,size_t,intptr_t};
-#[link(name="libfwnt")]
+#[link(name="libfwnt",kind="dylib")]
 extern {
     fn libfwnt_lzxpress_huffman_decompress(
         compressed_data: *const u8,
