@@ -8,7 +8,43 @@ To build RustyPrefetch
 ```cargo build --release```
 
 To build DecompressPrefetch and examples
-```cargo test```
+```cargo test --release```
+
+## Tools
+```
+RustyPrefetch\target\release>RustyPrefetch.exe -h
+RustyPrefetch 0.0.0
+Matthew Seyer <matthew.seyer@gmail.com>
+Parse prefetch.
+
+USAGE:
+    RustyPrefetch.exe [FLAGS] --source <FILE>
+
+FLAGS:
+    -h, --help          Prints help information
+    -t, --tracechain    Output Tracechains
+    -V, --version       Prints version information
+
+OPTIONS:
+    -s, --source <FILE>    The source path. Can be a file or a directory.
+```
+
+```
+RustyPrefetch\target\release\examples>DecompressPrefetch.exe -h
+DecodePrefetch 0.0.0
+Matthew Seyer <matthew.seyer@gmail.com>
+Test tool to decode a compressed prefetch file.
+
+USAGE:
+    DecompressPrefetch.exe --prefetch <FILE>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -p, --prefetch <FILE>    The Prefetch file to decode
+```
 
 # Example output
 ```RustyPrefetch.exe -p FIREFOX.EXE-6F7B2AEE.pf```
