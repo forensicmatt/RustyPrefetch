@@ -56,7 +56,7 @@ fn main() {
         .required(true)
         .takes_value(true);
 
-    let metrics_arg = Arg::with_name("pipe")
+    let metrics_arg = Arg::with_name("tracechain")
         .short("t")
         .long("tracechain")
         .help("Output Tracechains");
@@ -69,7 +69,7 @@ fn main() {
         .arg(metrics_arg)
         .get_matches();
 
-    if options.is_present("metrics"){
+    if options.is_present("tracechain"){
         unsafe {
             librp::metrics::SKIP_TRACECHAIN = true;
         }
