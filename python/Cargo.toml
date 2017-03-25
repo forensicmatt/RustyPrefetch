@@ -1,0 +1,20 @@
+[package]
+name = "pyrpf"
+version = "0.1.0"
+authors = ["matthew seyer <https://github.com/forensicmatt/RustyPrefetch>"]
+
+[lib]
+name = "pyrpf"
+crate-type = ["cdylib"]
+
+[dependencies]
+serde_json = "0.9"
+
+[dependencies.cpython]
+version = "*"
+default-features = false
+features = ["python27-sys"]
+
+[dependencies.RustyPrefetch]
+version = "*"
+path = ".."
