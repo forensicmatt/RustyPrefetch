@@ -1,16 +1,21 @@
 use serde_json;
 use rustyprefetch::librp::prefetch::{PrefetchHandle};
+use rustyprefetch::librp;
 use cpython::{  Python, PyObject,
                 PyResult, ObjectProtocol,
                 PyTuple, PyBytes, PyString};
 
 py_module_initializer!(pyrpf, initpyrpf, PyInit_pyrpf, |py, m| {
     try!(m.add(py, "__doc__", "Module documentation string"));
-    try!(m.add(py, "as_json", py_fn!(py, as_json(file_handle: PyObject))));
+    try!(m.add(py, "as_json", py_fn!(py, as_json(filename: &str, file_handle: PyObject))));
     Ok(())
 });
 
-fn as_json(py: Python, file_handle: PyObject) -> PyResult<PyString> {
+fn as_json(py: Python, filename: &str, file_handle: PyObject) -> PyResult<PyString> {
+    unsafe {
+        librp::metrics::SKIP_TRACECHAIN = true;
+    }
+
     // Seek to EOF
     file_handle.call_method(
         py,
@@ -47,7 +52,8 @@ fn as_json(py: Python, file_handle: PyObject) -> PyResult<PyString> {
     let py_bytes = byte_buffer.cast_into::<PyBytes>(py).unwrap();
 
     let pf_handle = PrefetchHandle::new(
-        "a_file_name",
+        // filename.to_string(py).unwrap(),
+        filename,
         Some(&py_bytes.data(py).to_vec())
     ).unwrap();
     let pf_file = pf_handle.get_prefetch().unwrap();
