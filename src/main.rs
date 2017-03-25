@@ -27,7 +27,7 @@ fn process_directory<S>(directory: &str, serializer: S) where S: serde::Serializ
 
 fn process_file<S: serde::ser::SerializeSeq>(filename: &str, serializer: &mut S) -> bool {
     // Check if file is a prefetch file
-    let prefetch_file = match librp::prefetch::PrefetchHandle::new(filename) {
+    let prefetch_file = match librp::prefetch::PrefetchHandle::new(filename,None) {
         Ok(prefetch_file) => prefetch_file,
         Err(error) => {
             warn!("Could not parse file: {} [error: {}]", filename, error);

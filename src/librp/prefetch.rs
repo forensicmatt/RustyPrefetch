@@ -9,6 +9,8 @@ use seek_bufread::BufReader;
 use std::io::Cursor;
 use std::fs::File;
 use std::io::Read;
+use std::io::Seek;
+use std::io::SeekFrom;
 use std::mem;
 use encoding::{Encoding, DecoderTrap};
 use encoding::all::UTF_16LE;
@@ -25,39 +27,69 @@ pub struct PrefetchHandle{
     pub buffer: Vec<u8>
 }
 impl PrefetchHandle{
-    pub fn new(prefetch_filename: &str) -> Result<PrefetchHandle,errors::PrefetchError> {
+    pub fn new(prefetch_filename: &str, buffer: Option<&Vec<u8>>) -> Result<PrefetchHandle,errors::PrefetchError> {
         let mut prefetch_file: PrefetchHandle = unsafe {
             mem::zeroed()
         };
         prefetch_file.filename = String::from(prefetch_filename);
 
-        // Check if file is a prefetch file
-        let signature = prefetch_signature(prefetch_filename)?;
+        if buffer.is_some(){
+            // Check if file is a prefetch file
+            let signature = prefetch_signature(&buffer.unwrap()[..8])?;
 
-        // Open a filehandle to the file
-        let mut fh = File::open(prefetch_filename)?;
+            if signature == 72171853 {
+                // Get MAM header
+                let header = read_mam_head(&buffer.unwrap()[..8])?;
 
-        if signature == 72171853{
-            // Get MAM header
-            let header = read_mam_head(&mut fh)?;
+                // decompress the buffer
+                let decompressed_buffer = match compression::decompress(
+                                                        &buffer.unwrap()[8..],
+                                                        header.uncompressed_size as usize){
+                    Some(decompressed_buffer) => decompressed_buffer,
+                    None => return Err(errors::PrefetchError::decompression_error(
+                        format!("Error decompressing file")))
+                };
 
-            // create a buffer for the compressed data
-            let mut compressed_buffer: Vec<u8> = Vec::new();
-            // read from file into the compressed buffer
-            fh.read_to_end(&mut compressed_buffer)?;
-
-            // decompress the buffer
-            let decompressed_buffer = match compression::decompress(
-                                                    &compressed_buffer[..],
-                                                    header.uncompressed_size as usize){
-                Some(decompressed_buffer) => decompressed_buffer,
-                None => return Err(errors::PrefetchError::decompression_error(
-                    format!("Error decompressing file")))
-            };
-
-            prefetch_file.buffer = decompressed_buffer.to_vec();
+                prefetch_file.buffer = decompressed_buffer.to_vec();
+            } else {
+                // A Buffer has been passed in
+                prefetch_file.buffer = buffer.unwrap().to_vec();
+            }
         } else {
-            try!(fh.read_to_end(&mut prefetch_file.buffer));
+            // Open a filehandle to the file
+            let mut fh = File::open(prefetch_filename)?;
+
+            // Create a header buffer for signature checks
+            let mut header_buffer = [0u8; 8];
+            fh.read_exact(&mut header_buffer)?;
+
+            // Check if file is a prefetch file
+            let signature = prefetch_signature(&header_buffer[..])?;
+
+            if signature == 72171853{
+                // Get MAM header
+                let header = read_mam_head(&header_buffer[..])?;
+
+                // create a buffer for the compressed data
+                let mut compressed_buffer: Vec<u8> = Vec::new();
+                // read from file into the compressed buffer
+                fh.read_to_end(&mut compressed_buffer)?;
+
+                // decompress the buffer
+                let decompressed_buffer = match compression::decompress(
+                                                        &compressed_buffer[..],
+                                                        header.uncompressed_size as usize){
+                    Some(decompressed_buffer) => decompressed_buffer,
+                    None => return Err(errors::PrefetchError::decompression_error(
+                        format!("Error decompressing file")))
+                };
+
+                prefetch_file.buffer = decompressed_buffer.to_vec();
+            } else {
+                // Seek back to start of file since no compression
+                fh.seek(SeekFrom::Start(0))?;
+                fh.read_to_end(&mut prefetch_file.buffer)?;
+            }
         }
 
         Ok(
@@ -175,33 +207,22 @@ pub fn read_mam_head<R: Read>(mut buffer: R)->Result<MamHeader,Error>{
     Ok(header)
 }
 
-pub fn prefetch_signature(filename: &str)->Result<u32,errors::PrefetchError>{
-    // Open a filehandle to the file
-    let mut fh = File::open(filename)?;
-
-    // Get File Size to ensure we have enough data to read
-    let metadata = try!(fh.metadata());
-    let file_size = metadata.len();
-
-    if file_size > 8 {
-        // We are only ever going to check the first 8 bytes of the file for a signature
-        // check for MAM signature
-        let prt1 = try!(fh.read_u32::<LittleEndian>());
-        if prt1 == 72171853 {
-            Ok(prt1)
-        }else{
-            // check for SCCA signature
-            let prt2 = try!(fh.read_u32::<LittleEndian>());
-            if prt2 == 1094927187 {
-                Ok(prt2)
-            } else {
-                // Unknown File signature
-                Err(errors::PrefetchError::invalid_file_signature(format!(
-                        "Unkown File Signature"
-                )))
-            }
+pub fn prefetch_signature<R: Read>(mut buffer: R)->Result<u32,errors::PrefetchError>{
+    // We are only ever going to check the first 8 bytes of the file for a signature
+    // check for MAM signature
+    let prt1 = try!(buffer.read_u32::<LittleEndian>());
+    if prt1 == 72171853 {
+        Ok(prt1)
+    }else{
+        // check for SCCA signature
+        let prt2 = try!(buffer.read_u32::<LittleEndian>());
+        if prt2 == 1094927187 {
+            Ok(prt2)
+        } else {
+            // Unknown File signature
+            Err(errors::PrefetchError::invalid_file_signature(format!(
+                    "Unkown File Signature"
+            )))
         }
-    } else {
-        Err(errors::PrefetchError::invalid_file_signature(format!("File size invalid")))
     }
 }
