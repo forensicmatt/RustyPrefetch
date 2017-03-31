@@ -7,3 +7,6 @@
 # More information here http://doc.crates.io/guide.html#cargotoml-vs-cargolock
 Cargo.lock
 /python/Cargo.lock
+
+/python/examples/*.dll
+/python/examples/*.pyd

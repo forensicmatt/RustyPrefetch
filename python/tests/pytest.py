@@ -1,5 +1,5 @@
 import sys
-sys.path.append("../target/debug")
+sys.path.append("../target/release")
 import pyrpf
 
 prefetch = sys.argv[1]
