@@ -1,8 +1,11 @@
 #[macro_use] extern crate log;
 extern crate rustyprefetch;
+extern crate rwinstructs;
 extern crate clap;
 extern crate serde_json;
 extern crate serde;
+use rwinstructs::reference;
+use rwinstructs::serialize;
 use serde::Serializer;
 use serde::ser::SerializeSeq;
 use rustyprefetch::librp;
@@ -62,7 +65,7 @@ fn main() {
         .help("Output Tracechains");
 
     let options = App::new("RustyPrefetch")
-        .version("0.0.0")
+        .version("0.1.0")
         .author("Matthew Seyer <https://github.com/forensicmatt/RustyPrefetch>")
         .about("Parse prefetch.")
         .arg(prefetch_arg)
@@ -74,6 +77,10 @@ fn main() {
             librp::metrics::SKIP_TRACECHAIN = true;
         }
     }
+
+    // Set Reference Display Options
+    unsafe{reference::NESTED_REFERENCE = true;}
+    unsafe{serialize::U64_SERIALIZATION = serialize::U64Serialization::AsString;}
 
     let source = options.value_of("source").unwrap();
 

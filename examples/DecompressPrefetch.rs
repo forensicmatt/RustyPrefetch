@@ -17,7 +17,7 @@ fn main() {
         .takes_value(true);
 
     let options = App::new("DecompressPrefetch")
-        .version("0.0.0")
+        .version("0.1.0")
         .author("Matthew Seyer <https://github.com/forensicmatt/RustyPrefetch>")
         .about("Test tool to decompress a compressed prefetch file.")
         .arg(prefetch_arg)
@@ -25,8 +25,14 @@ fn main() {
 
     let prefetch_file = options.value_of("prefetch").unwrap();
 
+    // Open a filehandle to the file
+    let mut fh = match File::open(prefetch_file) {
+        Ok(fh) => fh,
+        Err(error) => panic!("Error: {}",error)
+    };
+
     // Check if file is a prefetch file
-    let signature = match librp::prefetch::prefetch_signature(prefetch_file) {
+    let signature = match librp::prefetch::prefetch_signature(&mut fh) {
         Ok(signature) => signature,
         Err(error) => panic!(error)
     };
@@ -35,12 +41,6 @@ fn main() {
     if signature != 72171853 {
         panic!("File signatures is not MAM")
     }
-
-    // Open a filehandle to the file
-    let mut fh = match File::open(prefetch_file) {
-        Ok(fh) => fh,
-        Err(error) => panic!("Error: {}",error)
-    };
 
     // Get MAM header
     let header = match librp::prefetch::read_mam_head(&mut fh) {

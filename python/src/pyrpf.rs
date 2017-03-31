@@ -1,6 +1,8 @@
 use serde_json;
 use rustyprefetch::librp::prefetch::{PrefetchHandle};
 use rustyprefetch::librp;
+use rwinstructs::reference;
+use rwinstructs::serialize;
 use cpython::{  Python, PyObject,
                 PyResult, ObjectProtocol,
                 PyTuple, PyBytes, PyString};
@@ -12,8 +14,11 @@ py_module_initializer!(pyrpf, initpyrpf, PyInit_pyrpf, |py, m| {
 });
 
 fn as_json(py: Python, filename: &str, file_handle: PyObject) -> PyResult<PyString> {
-    unsafe {
-        librp::metrics::SKIP_TRACECHAIN = true;
+    unsafe{
+        reference::NESTED_REFERENCE = true;
+    }
+    unsafe{
+        serialize::U64_SERIALIZATION = serialize::U64Serialization::AsString;
     }
 
     // Seek to EOF
@@ -59,6 +64,6 @@ fn as_json(py: Python, filename: &str, file_handle: PyObject) -> PyResult<PyStri
     let pf_file = pf_handle.get_prefetch().unwrap();
 
     let json_string = serde_json::to_string(&pf_file).unwrap();
+
     Ok(PyString::new(py,&json_string))
-    // Ok(py.None())
 }

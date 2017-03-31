@@ -1,8 +1,8 @@
 use librp::errors::{PrefetchError};
 use librp::prefetch::{PrefetchHeader};
-use librp::timestamp::{WinTimestamp};
 use librp::utils;
 use librp::utils::{ByteArray};
+use rwinstructs::timestamp::{WinTimestamp};
 use byteorder::{ReadBytesExt, LittleEndian};
 use std::io::Read;
 use std::io::Cursor;

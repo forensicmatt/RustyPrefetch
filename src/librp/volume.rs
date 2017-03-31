@@ -1,9 +1,10 @@
 use librp::prefetch::{PrefetchHeader};
 use librp::fileinfo::{FileInformation};
-use librp::timestamp::{WinTimestamp};
 use librp::errors::{PrefetchError};
 use librp::filestrings;
 use librp::utils::{ByteArray};
+use rwinstructs::timestamp::{WinTimestamp};
+use rwinstructs::reference::{MftReference};
 use byteorder::{ReadBytesExt, LittleEndian};
 use std::io::SeekFrom;
 use std::io::Read;
@@ -14,7 +15,7 @@ use std::mem;
 pub struct ReferenceTable{
     pub version: u32,
     pub reference_count: u32,
-    pub references: Vec<u64>
+    pub references: Vec<MftReference>
 }
 impl ReferenceTable{
     pub fn new<Rs: Read+Seek>(offset: u32, mut reader: Rs) -> Result<ReferenceTable,PrefetchError> {
@@ -37,7 +38,7 @@ impl ReferenceTable{
 
         for i in 0..reference_table.reference_count{
             reference_table.references.push(
-                reader.read_u64::<LittleEndian>()?
+                MftReference(reader.read_u64::<LittleEndian>()?)
             );
         }
 

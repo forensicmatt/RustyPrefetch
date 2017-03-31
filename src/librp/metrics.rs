@@ -3,6 +3,7 @@ use librp::fileinfo::{FileInformation};
 use librp::errors::{PrefetchError};
 use librp::filestrings;
 use librp::tracechain::{TraceChainArray};
+use rwinstructs::reference::{MftReference};
 use byteorder::{ReadBytesExt, LittleEndian};
 use std::io::SeekFrom;
 use std::io::Read;
@@ -76,13 +77,17 @@ pub enum MetricEntry{
 
 impl MetricEntry{
     pub fn new<Rs: Read+Seek>(header: &PrefetchHeader, fileinfo: &FileInformation, mut reader: Rs) -> Result<MetricEntry,PrefetchError> {
+        let mut skip_tracechain: bool = false;
+        unsafe {
+            skip_tracechain = SKIP_TRACECHAIN
+        }
         if header.version == 17{
             let mut metric_v17 = MetricEntryV17::new(&mut reader)?;
             metric_v17.get_filename_string(
                 fileinfo,
                 &mut reader
             )?;
-            if unsafe{SKIP_TRACECHAIN} {
+            if !skip_tracechain {
                 metric_v17.get_tracechains(
                     fileinfo,
                     &mut reader
@@ -95,7 +100,7 @@ impl MetricEntry{
                 fileinfo,
                 &mut reader
             )?;
-            if unsafe{SKIP_TRACECHAIN} {
+            if !skip_tracechain {
                 metric_v23.get_tracechains(
                     fileinfo,
                     &mut reader
@@ -108,7 +113,7 @@ impl MetricEntry{
                 fileinfo,
                 &mut reader
             )?;
-            if unsafe{SKIP_TRACECHAIN} {
+            if !skip_tracechain {
                 metric_v26.get_tracechains(
                     fileinfo,
                     &mut reader
@@ -121,7 +126,7 @@ impl MetricEntry{
                 fileinfo,
                 &mut reader
             )?;
-            if unsafe{SKIP_TRACECHAIN} {
+            if !skip_tracechain {
                 metric_v30.get_tracechains(
                     fileinfo,
                     &mut reader
@@ -200,7 +205,7 @@ pub struct MetricEntryV23{
     pub filename_offset: u32, //The offset is relative to the start of the filename strings
     pub filename_length: u32, //num of chars (not including end of strign char)
     pub unknown3: u32,
-    pub file_reference: u64,
+    pub file_reference: MftReference,
     pub filename: String,
     pub tracechain: TraceChainArray
 }
@@ -216,7 +221,7 @@ impl MetricEntryV23{
         metricentry_v23.filename_offset = reader.read_u32::<LittleEndian>()?;
         metricentry_v23.filename_length = reader.read_u32::<LittleEndian>()?;
         metricentry_v23.unknown3 = reader.read_u32::<LittleEndian>()?;
-        metricentry_v23.file_reference = reader.read_u64::<LittleEndian>()?;
+        metricentry_v23.file_reference = MftReference(reader.read_u64::<LittleEndian>()?);
 
         Ok(metricentry_v23)
     }
@@ -261,7 +266,7 @@ pub struct MetricEntryV26{
     pub filename_offset: u32, //The offset is relative to the start of the filename strings
     pub filename_length: u32, //num of chars (not including end of strign char)
     pub unknown3: u32,
-    pub file_reference: u64,
+    pub file_reference: MftReference,
     pub filename: String,
     pub tracechain: TraceChainArray
 }
@@ -277,7 +282,7 @@ impl MetricEntryV26{
         metricentry_v26.filename_offset = reader.read_u32::<LittleEndian>()?;
         metricentry_v26.filename_length = reader.read_u32::<LittleEndian>()?;
         metricentry_v26.unknown3 = reader.read_u32::<LittleEndian>()?;
-        metricentry_v26.file_reference = reader.read_u64::<LittleEndian>()?;
+        metricentry_v26.file_reference = MftReference(reader.read_u64::<LittleEndian>()?);
 
         Ok(metricentry_v26)
     }
@@ -322,7 +327,7 @@ pub struct MetricEntryV30{
     pub filename_offset: u32, //The offset is relative to the start of the filename strings
     pub filename_length: u32, //num of chars (not including end of strign char)
     pub unknown3: u32,
-    pub file_reference: u64,
+    pub file_reference: MftReference,
     pub filename: String,
     pub tracechain: TraceChainArray
 }
@@ -338,7 +343,7 @@ impl MetricEntryV30{
         metricentry_v30.filename_offset = reader.read_u32::<LittleEndian>()?;
         metricentry_v30.filename_length = reader.read_u32::<LittleEndian>()?;
         metricentry_v30.unknown3 = reader.read_u32::<LittleEndian>()?;
-        metricentry_v30.file_reference = reader.read_u64::<LittleEndian>()?;
+        metricentry_v30.file_reference = MftReference(reader.read_u64::<LittleEndian>()?);
 
         Ok(metricentry_v30)
     }
