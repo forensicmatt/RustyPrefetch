@@ -1,12 +1,25 @@
 [package]
 name = "RustyPrefetch"
-version = "0.0.0"
+version = "0.1.0"
 authors = ["matthew seyer <https://github.com/forensicmatt/RustyPrefetch>"]
 build = "build.rs"
+
+[[bin]]
+name = "DecompressPrefetch"
+path = "examples/DecompressPrefetch.rs"
+
+[[bin]]
+name = "RustyPrefetch"
+path = "src/main.rs"
 
 [lib]
 name = "rustyprefetch"
 crate-type = ["cdylib","lib"]
+
+[dependencies.r-winstructs]
+version = "*"
+branch = "master"
+git = "https://github.com/forensicmatt/r-winstructs"
 
 [dependencies]
 log = "0.3"
