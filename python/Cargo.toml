@@ -18,3 +18,8 @@ features = ["python27-sys"]
 [dependencies.RustyPrefetch]
 version = "*"
 path = ".."
+
+[dependencies.r-winstructs]
+version = "*"
+branch = "master"
+git = "https://github.com/forensicmatt/r-winstructs"
