@@ -9,7 +9,7 @@ To build RustyPrefetch
 
 ## Tools
 ```
-RustyPrefetch 0.1.0
+RustyPrefetch 0.1.1
 Matthew Seyer <https://github.com/forensicmatt/RustyPrefetch>
 Parse prefetch.
 
@@ -53,7 +53,7 @@ By default mft reference structures are serialized into a nested structure with 
 ```
 
 # Example output
-```RustyPrefetch.exe -p FIREFOX.EXE-28641590.pf```
+```RustyPrefetch.exe -t -s FIREFOX.EXE-28641590.pf```
 
 ```json
 [
