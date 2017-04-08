@@ -164,4 +164,4 @@ DecompressPrefetch.exe -p COMPRESSED.EXE-9524B8E5.pf > DECOMPRESSED_PREFETCH.pf
 
 ## Change Log
 #### RustyUsn 0.1.1 (2017-04-08)
-- Updated some unkown fields based on @JamesHabbens (research)[http://blog.4n6ir.com/2017/03/windows-prefetch-tech-details-of-new.html]
+- Updated some unkown fields based on @JamesHabbens [research](http://blog.4n6ir.com/2017/03/windows-prefetch-tech-details-of-new.html)
