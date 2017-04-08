@@ -58,33 +58,33 @@ By default mft reference structures are serialized into a nested structure with 
 ```json
 [
   {
-    "source_file": "ACRORD32.EXE-0D099F9D.pf",
+    "source_file": "..\\testfiles\\Prefetch\\FIREFOX.EXE-6F7B2AEE.pf",
     "header": {
-      "version": 26,
+      "version": 30,
       "signature": 1094927187,
       "unknown1": 17,
-      "filesize": 152252,
-      "filename": "ACRORD32.EXE",
-      "hash": 218734493,
+      "filesize": 164180,
+      "filename": "FIREFOX.EXE",
+      "hash": 1870342894,
       "unknon2": 0
     },
     "fileinfo": {
       "metrics_array_offset": 304,
-      "metrics_entry_count": 135,
-      "trace_array_offset": 4624,
-      "trace_entry_count": 10458,
-      "filename_offset": 130120,
-      "filename_length": 18220,
-      "volume_info_offset": 148344,
+      "metrics_entry_count": 238,
+      "trace_array_offset": 7920,
+      "trace_entry_count": 12795,
+      "filename_offset": 110280,
+      "filename_length": 43814,
+      "volume_info_offset": 154096,
       "volume_info_count": 1,
-      "volume_info_size": 3908,
-      "unknown3": 4294967323,
+      "volume_info_size": 10084,
+      "unknown3": 8589934648,
       "last_run_time": [
-        "2013-10-21 20:00:20.379",
+        "2017-03-13 23:50:18.865",
         ...
       ],
-      "unknown1": "00000000000000000000000000000000",
-      "run_count": 6,
+      "unknown1": "008C864700000000008C864700000000",
+      "run_count": 102,
       "unknown2": 6,
       "unknown5": 3,
       "unknown4": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
@@ -92,65 +92,66 @@ By default mft reference structures are serialized into a nested structure with 
     "metrics": [
       {
         "tracechain_index": 0,
-        "tracechain_count": 297,
-        "unknown4": 33,
+        "tracechain_count": 44,
+        "prefetched_blocks": 42,
         "filename_offset": 0,
-        "filename_length": 81,
-        "unknown3": 512,
+        "filename_length": 82,
+        "flags": "0x0002: RESOURCE",
         "file_reference": {
-          "reference": "2533274790580458",
-          "entry": 184554,
-          "sequence": 9
+          "reference": "73183493944786011",
+          "entry": 15451,
+          "sequence": 260
         },
-        "filename": "\\DEVICE\\HARDDISKVOLUME5\\PROGRAM FILES (X86)\\ADOBE\\READER 11.0\\READER\\COOLTYPE.DLL",
+        "filename": "\\VOLUME{01cfdb43985a7134-dc989894}\\PROGRAM FILES (X86)\\MOZILLA FIREFOX\\MOZGLUE.DLL",
         "tracechain": [
           {
-            "next_index": 1,
             "block_load_count": 0,
-            "unknown1": 3,
-            "unknown2": 1,
-            "unknown3": 22
+            "flags": "00000110: EXECUTABLE | RESOURCE",
+            "unknown2": 0,
+            "usage": "00000000",
+            "prefetched": "00000000"
           },
           ...
         ]
-      }
+      },
       ...
     ],
     "volumes": [
       {
-        "path_offset": 104,
-        "path_length": 23,
-        "vol_creation_time": "2013-06-02 03:43:28.889",
-        "volume_serial": 2119740080,
-        "references_offset": 152,
-        "references_data_size": 656,
-        "directory_offset": 808,
-        "directory_string_count": 27,
-        "unknown1": 53,
-        "unknown2": "00000000000000000000000000000000000000000000000000000000",
-        "unknown3": 27,
-        "unknown4": "00000000000000000000000000000000000000000000000000000000",
+        "path_offset": 96,
+        "path_length": 34,
+        "vol_creation_time": "2014-09-28 17:42:38.238",
+        "volume_serial": 3700988052,
+        "references_offset": 168,
+        "references_data_size": 1560,
+        "directory_offset": 1728,
+        "directory_string_count": 56,
+        "unknown1": 137,
+        "unknown2": "000000000000000000000000000000000000000000000000",
+        "unknown3": 56,
+        "unknown4": "000000000000000000000000000000000000000000000000",
         "unknown5": 0,
-        "path_string": "\\DEVICE\\HARDDISKVOLUME5",
+        "path_string": "\\VOLUME{01cfdb43985a7134-dc989894}",
         "directory_strings": [
-          "\\DEVICE\\HARDDISKVOLUME5\\PROGRAM FILES (X86)",
-           ...
+          "\\VOLUME{01cfdb43985a7134-dc989894}\\$EXTEND",
+          ...
         ],
         "reference_table": {
           "version": 3,
-          "reference_count": 80,
+          "reference_count": 193,
           "references": [
             {
-              "reference": "3096224743995331",
-              "entry": 178115,
-              "sequence": 11
+              "reference": "0",
+              "entry": 0,
+              "sequence": 0
             },
             ...
           ]
         }
       }
     ]
-  }
+  },
+  ...
 ]
 ```
 
@@ -160,3 +161,7 @@ The DecompressPrefetch tool under the examples can be used specifically to decom
 ```
 DecompressPrefetch.exe -p COMPRESSED.EXE-9524B8E5.pf > DECOMPRESSED_PREFETCH.pf
 ```
+
+## Change Log
+#### RustyUsn 0.1.1 (2017-04-08)
+- Updated some unkown fields based on @JamesHabbens (research)[http://blog.4n6ir.com/2017/03/windows-prefetch-tech-details-of-new.html]
