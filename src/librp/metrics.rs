@@ -5,12 +5,30 @@ use librp::filestrings;
 use librp::tracechain::{TraceChainArray};
 use rwinstructs::reference::{MftReference};
 use byteorder::{ReadBytesExt, LittleEndian};
+use serde::{ser};
 use std::io::SeekFrom;
 use std::io::Read;
 use std::io::Seek;
 use std::mem;
 
+// Additional thanks to James Habben for more research into
+// previously unknown struct fields
+// http://blog.4n6ir.com/2017/03/windows-prefetch-tech-details-of-new.html
+
 pub static mut SKIP_TRACECHAIN: bool = false;
+
+bitflags! {
+    pub flags MetricFlag: u32 {
+        const NOT_PREFETCHED      = 0x0001, // blocks should not be prefetched
+        const RESOURCE            = 0x0002, // blocks will be loaded as resources, non-executable
+        const EXECUTABLE_MEMORY   = 0x0200, // blocks will be loaded into executable memory sections
+    }
+}
+
+pub fn serialize_metric_flags<S>(&item: &MetricFlag, serializer: S) -> Result<S::Ok, S::Error> where S: ser::Serializer
+{
+    serializer.serialize_str(&format!("0x{:04X}: {:?}", item.bits(), item))
+}
 
 #[derive(Serialize, Debug)]
 pub struct MetricsArray(
@@ -146,7 +164,8 @@ pub struct MetricEntryV17{
     pub tracechain_count: u32,
     pub filename_offset: u32, //The offset is relative to the start of the filename strings
     pub filename_length: u32, //num of chars (not including end of strign char)
-    pub unknown3: u32,
+    #[serde(serialize_with = "serialize_metric_flags")]
+    pub flags: MetricFlag,
     pub filename: String,
     pub tracechain: TraceChainArray
 }
@@ -160,7 +179,9 @@ impl MetricEntryV17{
         metricentry_v17.tracechain_count = reader.read_u32::<LittleEndian>()?;
         metricentry_v17.filename_offset = reader.read_u32::<LittleEndian>()?;
         metricentry_v17.filename_length = reader.read_u32::<LittleEndian>()?;
-        metricentry_v17.unknown3 = reader.read_u32::<LittleEndian>()?;
+        metricentry_v17.flags = MetricFlag::from_bits_truncate(
+            reader.read_u32::<LittleEndian>()?
+        );
 
         Ok(metricentry_v17)
     }
@@ -201,10 +222,11 @@ impl MetricEntryV17{
 pub struct MetricEntryV23{
     pub tracechain_index: u32,
     pub tracechain_count: u32,
-    pub unknown4: u32,
+    pub prefetched_blocks: u32,
     pub filename_offset: u32, //The offset is relative to the start of the filename strings
     pub filename_length: u32, //num of chars (not including end of strign char)
-    pub unknown3: u32,
+    #[serde(serialize_with = "serialize_metric_flags")]
+    pub flags: MetricFlag,
     pub file_reference: MftReference,
     pub filename: String,
     pub tracechain: TraceChainArray
@@ -217,10 +239,12 @@ impl MetricEntryV23{
 
         metricentry_v23.tracechain_index = reader.read_u32::<LittleEndian>()?;
         metricentry_v23.tracechain_count = reader.read_u32::<LittleEndian>()?;
-        metricentry_v23.unknown4 = reader.read_u32::<LittleEndian>()?;
+        metricentry_v23.prefetched_blocks = reader.read_u32::<LittleEndian>()?;
         metricentry_v23.filename_offset = reader.read_u32::<LittleEndian>()?;
         metricentry_v23.filename_length = reader.read_u32::<LittleEndian>()?;
-        metricentry_v23.unknown3 = reader.read_u32::<LittleEndian>()?;
+        metricentry_v23.flags = MetricFlag::from_bits_truncate(
+            reader.read_u32::<LittleEndian>()?
+        );
         metricentry_v23.file_reference = MftReference(reader.read_u64::<LittleEndian>()?);
 
         Ok(metricentry_v23)
@@ -262,10 +286,11 @@ impl MetricEntryV23{
 pub struct MetricEntryV26{
     pub tracechain_index: u32,
     pub tracechain_count: u32,
-    pub unknown4: u32,
+    pub prefetched_blocks: u32,
     pub filename_offset: u32, //The offset is relative to the start of the filename strings
     pub filename_length: u32, //num of chars (not including end of strign char)
-    pub unknown3: u32,
+    #[serde(serialize_with = "serialize_metric_flags")]
+    pub flags: MetricFlag,
     pub file_reference: MftReference,
     pub filename: String,
     pub tracechain: TraceChainArray
@@ -278,10 +303,12 @@ impl MetricEntryV26{
 
         metricentry_v26.tracechain_index = reader.read_u32::<LittleEndian>()?;
         metricentry_v26.tracechain_count = reader.read_u32::<LittleEndian>()?;
-        metricentry_v26.unknown4 = reader.read_u32::<LittleEndian>()?;
+        metricentry_v26.prefetched_blocks = reader.read_u32::<LittleEndian>()?;
         metricentry_v26.filename_offset = reader.read_u32::<LittleEndian>()?;
         metricentry_v26.filename_length = reader.read_u32::<LittleEndian>()?;
-        metricentry_v26.unknown3 = reader.read_u32::<LittleEndian>()?;
+        metricentry_v26.flags = MetricFlag::from_bits_truncate(
+            reader.read_u32::<LittleEndian>()?
+        );
         metricentry_v26.file_reference = MftReference(reader.read_u64::<LittleEndian>()?);
 
         Ok(metricentry_v26)
@@ -323,10 +350,11 @@ impl MetricEntryV26{
 pub struct MetricEntryV30{
     pub tracechain_index: u32,
     pub tracechain_count: u32,
-    pub unknown4: u32,
+    pub prefetched_blocks: u32,
     pub filename_offset: u32, //The offset is relative to the start of the filename strings
     pub filename_length: u32, //num of chars (not including end of strign char)
-    pub unknown3: u32,
+    #[serde(serialize_with = "serialize_metric_flags")]
+    pub flags: MetricFlag,
     pub file_reference: MftReference,
     pub filename: String,
     pub tracechain: TraceChainArray
@@ -339,10 +367,12 @@ impl MetricEntryV30{
 
         metricentry_v30.tracechain_index = reader.read_u32::<LittleEndian>()?;
         metricentry_v30.tracechain_count = reader.read_u32::<LittleEndian>()?;
-        metricentry_v30.unknown4 = reader.read_u32::<LittleEndian>()?;
+        metricentry_v30.prefetched_blocks = reader.read_u32::<LittleEndian>()?;
         metricentry_v30.filename_offset = reader.read_u32::<LittleEndian>()?;
         metricentry_v30.filename_length = reader.read_u32::<LittleEndian>()?;
-        metricentry_v30.unknown3 = reader.read_u32::<LittleEndian>()?;
+        metricentry_v30.flags = MetricFlag::from_bits_truncate(
+            reader.read_u32::<LittleEndian>()?
+        );
         metricentry_v30.file_reference = MftReference(reader.read_u64::<LittleEndian>()?);
 
         Ok(metricentry_v30)
