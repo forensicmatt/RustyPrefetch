@@ -15,7 +15,7 @@ use std::mem;
 // previously unknown struct fields
 // http://blog.4n6ir.com/2017/03/windows-prefetch-tech-details-of-new.html
 
-pub static mut SKIP_TRACECHAIN: bool = false;
+pub static mut SKIP_TRACECHAIN: bool = true;
 
 bitflags! {
     pub flags MetricFlag: u32 {

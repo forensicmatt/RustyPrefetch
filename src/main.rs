@@ -65,7 +65,7 @@ fn main() {
         .help("Output Tracechains");
 
     let options = App::new("RustyPrefetch")
-        .version("0.1.0")
+        .version("0.1.1")
         .author("Matthew Seyer <https://github.com/forensicmatt/RustyPrefetch>")
         .about("Parse prefetch.")
         .arg(prefetch_arg)
@@ -74,7 +74,7 @@ fn main() {
 
     if options.is_present("tracechain"){
         unsafe {
-            librp::metrics::SKIP_TRACECHAIN = true;
+            librp::metrics::SKIP_TRACECHAIN = false;
         }
     }
 

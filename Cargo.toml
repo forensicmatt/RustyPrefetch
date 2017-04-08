@@ -1,6 +1,6 @@
 [package]
 name = "RustyPrefetch"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["matthew seyer <https://github.com/forensicmatt/RustyPrefetch>"]
 build = "build.rs"
 
