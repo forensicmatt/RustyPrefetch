@@ -1,6 +1,6 @@
 [package]
 name = "RustyPrefetch"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["matthew seyer <https://github.com/forensicmatt/RustyPrefetch>"]
 build = "build.rs"
 
@@ -33,6 +33,9 @@ serde = "0.9"
 serde_derive = "0.9"
 serde_json = "0.9"
 seek_bufread = "~1.2"
+
+[dependencies.jmespath]
+version = "^0.1.1"
 
 [dependencies.chrono]
 version = "*"
