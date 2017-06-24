@@ -1,4 +1,4 @@
-A fast and cross platform Prefetch parser written in Rust that gives you the ability to query the records via [JMES Query](http://jmespath.org/). Output is [JSONL](http://jsonlines.org/).
+A fast and cross platform Prefetch parser written in Rust that gives you the ability to query the records via [JMESPath](http://jmespath.org/) queries. Output is [JSONL](http://jsonlines.org/).
 
 ## Build
 To build you must set LIBFWNT_BIN to the path that contains the compiled libscca library. You must also copy the compiled library to the same folder as the compiled rust tools. At some point I will try and copy the compiled library from LIBFWNT_BIN to the compiled paths from the build... but for now it is a manual job
